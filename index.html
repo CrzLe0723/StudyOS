@@ -3,215 +3,276 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>StudyOS</title>
+  <meta name="theme-color" content="#f8f7f2">
+  <title>Odelis — A space for thought</title>
+  <meta name="description" content="A thoughtful workspace for learning, planning, and organizing ideas.">
   <style>
+    :root {
+      color-scheme: light;
+      --paper: #f8f7f2;
+      --surface: #fffefa;
+      --ink: #292c2a;
+      --muted: #777b72;
+      --line: #e6e4db;
+      --forest: #263b32;
+      --forest-soft: #e9eee8;
+      --sage: #a4b09c;
+      --sand: #eee8dc;
+      --rose: #8d5d51;
+      --shadow: 0 8px 28px rgba(38, 59, 50, .045);
+    }
     * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      padding: 30px 18px;
-      background: #10121b;
-      color: #f1f3fb;
-      font-family: system-ui, sans-serif;
+    body { margin: 0; background: var(--paper); color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid #93a58f; outline-offset: 3px; }
+    .app { min-height: 100vh; display: grid; grid-template-columns: 238px minmax(0, 1fr); }
+    aside { padding: 29px 18px 22px; border-right: 1px solid var(--line); display: flex; flex-direction: column; background: rgba(255,254,250,.62); }
+    .brand { padding: 0 12px 32px; }
+    .brand-name { font-family: Georgia, "Times New Roman", serif; font-size: 30px; letter-spacing: -.9px; color: var(--forest); line-height: 1; }
+    .brand-tagline { color: var(--muted); font-size: 11px; letter-spacing: .035em; margin-top: 8px; }
+    .nav-label { color: #96988f; text-transform: uppercase; font-size: 10px; letter-spacing: .13em; font-weight: 700; padding: 0 12px; margin: 4px 0 10px; }
+    nav { display: grid; gap: 5px; }
+    .nav-item { border: 0; background: transparent; color: #646a61; text-align: left; display: flex; align-items: center; gap: 12px; border-radius: 9px; padding: 11px 12px; font-size: 13px; transition: background .15s, color .15s; }
+    .nav-item:hover { background: #f0efe8; color: var(--forest); }
+    .nav-item.active { background: var(--forest-soft); color: var(--forest); font-weight: 650; }
+    .nav-icon { width: 18px; text-align: center; font-size: 16px; opacity: .9; }
+    .sidebar-note { margin-top: auto; border-top: 1px solid var(--line); padding: 18px 11px 0; color: var(--muted); font-size: 11px; line-height: 1.65; }
+    .sidebar-note strong { display: block; color: var(--forest); font-size: 12px; font-weight: 650; margin-bottom: 3px; }
+    main { min-width: 0; max-width: 1360px; width: 100%; padding: 36px clamp(22px, 4.5vw, 68px) 56px; margin: 0 auto; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 43px; }
+    .eyebrow { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .12em; font-weight: 700; }
+    .today { color: var(--muted); font-size: 12px; }
+    .welcome { margin-bottom: 30px; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(32px, 4vw, 43px); letter-spacing: -1.2px; font-weight: 400; line-height: 1.13; margin: 10px 0 10px; color: var(--forest); }
+    .intro { color: var(--muted); font-size: 14px; line-height: 1.65; margin: 0; max-width: 540px; }
+    .stats { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; margin: 29px 0 26px; }
+    .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 13px; padding: 19px 20px; box-shadow: var(--shadow); }
+    .stat-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 12px; }
+    .stat-mark { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: var(--forest-soft); color: var(--forest); font-size: 13px; }
+    .stat-number { font-family: Georgia, "Times New Roman", serif; font-size: 34px; color: var(--forest); margin-top: 10px; line-height: 1; }
+    .stat-foot { color: #8b8e85; font-size: 11px; margin-top: 8px; }
+    .content-grid { display: grid; grid-template-columns: minmax(0,1.55fr) minmax(245px,.85fr); gap: 17px; align-items: start; }
+    .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 13px; box-shadow: var(--shadow); padding: 22px; min-width: 0; }
+    .panel-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 18px; }
+    h2 { color: var(--forest); font-family: Georgia, "Times New Roman", serif; font-size: 22px; font-weight: 400; letter-spacing: -.35px; margin: 0 0 5px; }
+    .panel-subtitle { color: var(--muted); font-size: 12px; margin: 0; line-height: 1.5; }
+    .text-button { border: 0; background: transparent; color: var(--forest); font-size: 12px; padding: 5px 0; font-weight: 650; white-space: nowrap; }
+    .text-button:hover { text-decoration: underline; }
+    .primary { border: 0; background: var(--forest); color: #fffefa; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 650; }
+    .primary:hover { background: #344d41; }
+    .add-form { display: grid; grid-template-columns: minmax(0,1fr) 112px auto; gap: 8px; margin: 0 0 17px; }
+    .field { width: 100%; border: 1px solid var(--line); border-radius: 8px; background: #fffefa; color: var(--ink); padding: 10px 11px; font-size: 12px; min-width: 0; }
+    .field::placeholder { color: #a1a39b; }
+    .filters { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0 5px; }
+    .filter { border: 1px solid transparent; background: transparent; color: var(--muted); border-radius: 7px; padding: 7px 9px; font-size: 11px; }
+    .filter:hover { background: #f3f2eb; }
+    .filter.active { color: var(--forest); background: var(--forest-soft); border-color: #dce4d9; font-weight: 650; }
+    .task-list { margin-top: 9px; }
+    .task { display: flex; align-items: flex-start; gap: 11px; border-top: 1px solid #eeece5; padding: 14px 1px; }
+    .task-check { width: 16px; height: 16px; accent-color: var(--forest); margin: 2px 0 0; flex: 0 0 auto; }
+    .task-info { min-width: 0; flex: 1; }
+    .task-title { color: #343832; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+    .task.done .task-title { color: #9a9c94; text-decoration: line-through; }
+    .task-meta { color: #92958c; font-size: 10px; line-height: 1.5; margin-top: 4px; }
+    .priority { display: inline-block; border-radius: 4px; padding: 2px 5px; margin-right: 5px; background: #f0eee7; color: #74766e; font-size: 9px; }
+    .priority.high { background: #f4e8e3; color: #895649; }
+    .delete { border: 0; background: transparent; color: #a2a49b; font-size: 17px; line-height: 1; padding: 0 3px; }
+    .delete:hover { color: var(--rose); }
+    .empty { text-align: center; padding: 30px 12px 24px; color: var(--muted); font-size: 12px; line-height: 1.7; }
+    .empty-symbol { font-family: Georgia, serif; color: var(--sage); font-size: 28px; margin-bottom: 7px; }
+    .side-stack { display: grid; gap: 17px; }
+    .quote-panel { background: var(--forest); border-color: var(--forest); color: #f8f7f2; padding: 23px; overflow: hidden; position: relative; }
+    .quote-panel:after { content: "“"; position: absolute; font-family: Georgia, serif; font-size: 150px; line-height: 1; right: 8px; bottom: -55px; color: rgba(255,255,255,.07); }
+    .quote-label { font-size: 10px; text-transform: uppercase; letter-spacing: .13em; color: #c0cbbd; margin-bottom: 17px; }
+    .quote { font-family: Georgia, "Times New Roman", serif; font-size: 21px; line-height: 1.4; max-width: 245px; margin-bottom: 13px; }
+    .quote-foot { color: #c0cbbd; font-size: 11px; }
+    .focus-list { display: grid; gap: 0; }
+    .focus-item { display: flex; gap: 11px; align-items: flex-start; border-top: 1px solid #eeece5; padding: 13px 0; }
+    .focus-item:first-child { border-top: 0; padding-top: 0; }
+    .focus-dot { width: 7px; height: 7px; margin-top: 5px; border-radius: 50%; background: var(--sage); flex: 0 0 auto; }
+    .focus-title { font-size: 12px; color: #42463f; line-height: 1.45; }
+    .focus-copy { font-size: 10px; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+    .quick-links { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .quick-link { text-align: left; border: 1px solid var(--line); border-radius: 9px; background: #fffefa; padding: 13px; color: var(--forest); }
+    .quick-link:hover { border-color: #c6d0c1; background: #f8faf6; }
+    .quick-icon { font-size: 17px; margin-bottom: 8px; }
+    .quick-title { font-size: 11px; font-weight: 650; }
+    .quick-copy { color: var(--muted); font-size: 10px; margin-top: 4px; line-height: 1.4; }
+    .page-panel { display: none; }
+    .page-panel.active { display: block; }
+    .page-placeholder { margin-top: 22px; padding: 36px 22px; text-align: center; border: 1px dashed #d8d7cc; border-radius: 12px; color: var(--muted); font-size: 13px; line-height: 1.7; }
+    .page-placeholder strong { display: block; color: var(--forest); font-family: Georgia, serif; font-size: 22px; font-weight: 400; margin-bottom: 8px; }
+    .mobile-brand { display: none; }
+    .footer { color: #a0a197; font-size: 10px; margin-top: 27px; text-align: center; }
+    @media (max-width: 950px) {
+      .app { grid-template-columns: 205px minmax(0,1fr); }
+      aside { padding-left: 12px; padding-right: 12px; }
+      main { padding-left: 25px; padding-right: 25px; }
+      .content-grid { grid-template-columns: minmax(0,1fr); }
+      .side-stack { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .side-stack .quote-panel { grid-row: span 2; }
     }
-
-    main { max-width: 1000px; margin: auto; }
-    h1 { margin-bottom: 5px; }
-    .muted { color: #9ba3ba; }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin: 24px 0;
-    }
-
-    .card {
-      background: #191c29;
-      border: 1px solid #2c3145;
-      border-radius: 14px;
-      padding: 18px;
-      margin-bottom: 16px;
-    }
-
-    .number { font-size: 28px; font-weight: 750; }
-
-    input, select, button {
-      font: inherit;
-      padding: 10px;
-      border-radius: 8px;
-    }
-
-    input, select {
-      width: 100%;
-      background: #10121b;
-      color: white;
-      border: 1px solid #363b50;
-    }
-
-    label {
-      display: block;
-      margin: 12px 0 5px;
-      color: #b4bad0;
-      font-size: 13px;
-    }
-
-    button {
-      border: 0;
-      cursor: pointer;
-      background: #aa99ff;
-      color: #17142b;
-      font-weight: 650;
-    }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: 2fr 1fr 1fr;
-      gap: 12px;
-    }
-
-    .filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
-    .filters button { background: #292d40; color: white; }
-    .filters button.active { background: #aa99ff; color: #17142b; }
-
-    .task {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 14px 0;
-      border-bottom: 1px solid #2c3145;
-    }
-
-    .task input { width: 18px; }
-    .task-info { flex: 1; overflow-wrap: anywhere; }
-    .task small { display: block; color: #9ba3ba; margin-top: 5px; }
-    .task.done .task-title { text-decoration: line-through; color: #9ba3ba; }
-    .delete { background: transparent; color: #ff8989; font-size: 18px; }
-
     @media (max-width: 650px) {
-      .stats { grid-template-columns: 1fr; }
-      .form-grid { grid-template-columns: 1fr; gap: 0; }
+      .app { display: block; }
+      aside { position: sticky; top: 0; z-index: 5; padding: 11px 14px 10px; border-right: 0; border-bottom: 1px solid var(--line); background: rgba(248,247,242,.96); backdrop-filter: blur(12px); }
+      .brand { padding: 0 3px 10px; }
+      .brand-name { font-size: 25px; }
+      .brand-tagline { display: none; }
+      .nav-label, .sidebar-note { display: none; }
+      nav { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 1px; }
+      .nav-item { white-space: nowrap; padding: 8px 10px; font-size: 11px; gap: 7px; }
+      .nav-icon { font-size: 14px; width: auto; }
+      main { padding: 25px 16px 35px; }
+      .topbar { margin-bottom: 28px; }
+      .stats { gap: 8px; margin: 22px 0; }
+      .stat { padding: 13px 12px; }
+      .stat-top { font-size: 10px; align-items: flex-start; }
+      .stat-mark { display: none; }
+      .stat-number { font-size: 28px; margin-top: 9px; }
+      .stat-foot { font-size: 9px; line-height: 1.4; }
+      .panel { padding: 17px; }
+      .add-form { grid-template-columns: minmax(0,1fr) auto; }
+      .add-form .field:nth-child(2) { grid-column: 1 / -1; grid-row: 2; }
+      .add-form .primary { grid-column: 2; grid-row: 1; }
+      .side-stack { grid-template-columns: 1fr; }
+      .side-stack .quote-panel { grid-row: auto; }
+      .quote { max-width: 330px; }
     }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; } }
   </style>
 </head>
 <body>
-<main>
-  <header>
-    <h1>✦ StudyOS</h1>
-    <div class="muted">Your school, activities & life — in one place.</div>
-    <p id="today" class="muted"></p>
-  </header>
+<div class="app">
+  <aside>
+    <div class="brand">
+      <div class="brand-name">odelis</div>
+      <div class="brand-tagline">A space for thought.</div>
+    </div>
+    <div class="nav-label">Workspace</div>
+    <nav aria-label="Main navigation">
+      <button class="nav-item active" data-page="overview"><span class="nav-icon" aria-hidden="true">⌂</span>Overview</button>
+      <button class="nav-item" data-page="planner"><span class="nav-icon" aria-hidden="true">▦</span>Planner</button>
+      <button class="nav-item" data-page="library"><span class="nav-icon" aria-hidden="true">▤</span>Notes &amp; Library</button>
+      <button class="nav-item" data-page="learning"><span class="nav-icon" aria-hidden="true">◇</span>Learning</button>
+    </nav>
+    <div class="sidebar-note">
+      <strong>Make room to think.</strong>
+      A calm place for the things you're learning, planning, and creating.
+    </div>
+  </aside>
 
-  <section class="stats">
-    <div class="card">
-      <div class="muted">Active tasks</div>
-      <div class="number" id="total">0</div>
+  <main>
+    <div class="topbar">
+      <div class="eyebrow" id="sectionLabel">Your workspace</div>
+      <div class="today" id="today"></div>
     </div>
-    <div class="card">
-      <div class="muted">Due today</div>
-      <div class="number" id="due">0</div>
-    </div>
-    <div class="card">
-      <div class="muted">Completed</div>
-      <div class="number" id="completed">0</div>
-    </div>
-  </section>
 
-  <section class="card">
-    <h2>Add a task</h2>
-    <form id="taskForm">
-      <div class="form-grid">
-        <div>
-          <label for="title">Task name</label>
-          <input id="title" maxlength="140" placeholder="Study Acadeca science..." required>
-        </div>
-        <div>
-          <label for="category">Category</label>
-          <select id="category">
-            <option>School</option>
-            <option>Acadeca</option>
-            <option>Sports</option>
-            <option>Personal</option>
-          </select>
-        </div>
-        <div>
-          <label for="priority">Priority</label>
-          <select id="priority">
-            <option>High</option>
-            <option selected>Medium</option>
-            <option>Low</option>
-          </select>
+    <section class="page-panel active" id="page-overview">
+      <div class="welcome">
+        <div class="eyebrow">A new page, every day</div>
+        <h1>Good to have you here.</h1>
+        <p class="intro">A little structure creates room for big ideas. Start with what matters today, and take it one thoughtful step at a time.</p>
+      </div>
+
+      <div class="stats" aria-label="Task overview">
+        <div class="stat"><div class="stat-top"><span>In progress</span><span class="stat-mark" aria-hidden="true">↗</span></div><div class="stat-number" id="total">0</div><div class="stat-foot">Things still to do</div></div>
+        <div class="stat"><div class="stat-top"><span>Due today</span><span class="stat-mark" aria-hidden="true">◷</span></div><div class="stat-number" id="due">0</div><div class="stat-foot">Today's priorities</div></div>
+        <div class="stat"><div class="stat-top"><span>Completed</span><span class="stat-mark" aria-hidden="true">✓</span></div><div class="stat-number" id="completed">0</div><div class="stat-foot">Steps already taken</div></div>
+      </div>
+
+      <div class="content-grid">
+        <section class="panel">
+          <div class="panel-head">
+            <div><h2>Task list</h2><p class="panel-subtitle">Keep the next step in sight.</p></div>
+            <button class="text-button" id="export">Export ↗</button>
+          </div>
+          <form id="taskForm" class="add-form">
+            <input class="field" id="title" maxlength="140" placeholder="What needs your attention?" aria-label="Task name" required>
+            <select class="field" id="category" aria-label="Task category">
+              <option>School</option><option>Acadeca</option><option>Personal</option><option>Project</option><option>Other</option>
+            </select>
+            <button class="primary" type="submit">+ Add task</button>
+          </form>
+          <div class="filters" id="filters" aria-label="Filter tasks">
+            <button class="filter active" data-filter="All">All</button>
+            <button class="filter" data-filter="Active">Active</button>
+            <button class="filter" data-filter="Today">Today</button>
+            <button class="filter" data-filter="School">School</button>
+            <button class="filter" data-filter="Acadeca">Acadeca</button>
+            <button class="filter" data-filter="Completed">Completed</button>
+          </div>
+          <div class="task-list" id="tasks" aria-live="polite"></div>
+          <p class="panel-subtitle" style="margin-top:14px">Tasks are saved in this browser on this device. Export a backup to keep a copy.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:11px">
+            <button class="text-button" id="importButton">Import backup</button>
+            <input id="importFile" type="file" accept=".json,application/json" hidden>
+          </div>
+        </section>
+
+        <div class="side-stack">
+          <section class="panel quote-panel">
+            <div class="quote-label">A thought to keep</div>
+            <p class="quote">“It is not enough to be busy; so are the ants. The question is: What are we busy about?”</p>
+            <div class="quote-foot">— Henry David Thoreau</div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><div><h2>Start somewhere</h2><p class="panel-subtitle">A few places to begin.</p></div></div>
+            <div class="quick-links">
+              <button class="quick-link" data-goto="planner"><div class="quick-icon" aria-hidden="true">▦</div><div class="quick-title">Planner</div><div class="quick-copy">Make a little plan</div></button>
+              <button class="quick-link" data-goto="library"><div class="quick-icon" aria-hidden="true">▤</div><div class="quick-title">Library</div><div class="quick-copy">Keep ideas together</div></button>
+              <button class="quick-link" data-goto="learning"><div class="quick-icon" aria-hidden="true">◇</div><div class="quick-title">Learning</div><div class="quick-copy">Build understanding</div></button>
+              <button class="quick-link" id="focusButton"><div class="quick-icon" aria-hidden="true">◎</div><div class="quick-title">Focus</div><div class="quick-copy">Choose one next step</div></button>
+            </div>
+          </section>
         </div>
       </div>
-      <div class="form-grid">
-        <div>
-          <label for="deadline">Due date</label>
-          <input id="deadline" type="date">
-        </div>
-        <div>
-          <label for="duration">Estimated minutes</label>
-          <select id="duration">
-            <option>15</option>
-            <option selected>30</option>
-            <option>45</option>
-            <option>60</option>
-            <option>90</option>
-            <option>120</option>
-          </select>
-        </div>
-        <div style="display:flex;align-items:end;padding-top:12px">
-          <button style="width:100%" type="submit">+ Add task</button>
-        </div>
-      </div>
-    </form>
-  </section>
+    </section>
 
-  <section class="card">
-    <h2>Your tasks</h2>
-    <div class="filters" id="filters">
-      <button class="active" data-filter="All">All</button>
-      <button data-filter="Active">Active</button>
-      <button data-filter="Today">Due today</button>
-      <button data-filter="School">School</button>
-      <button data-filter="Acadeca">Acadeca</button>
-      <button data-filter="Sports">Sports</button>
-      <button data-filter="Completed">Completed</button>
-    </div>
-    <div id="tasks"></div>
-    <p class="muted" style="font-size:12px">
-      Tasks are saved in this browser. Use the same browser to access them.
-    </p>
-    <button id="export">Export backup</button>
-    <button id="importButton">Import backup</button>
-    <input id="importFile" type="file" accept=".json,application/json" hidden>
-  </section>
-</main>
+    <section class="page-panel" id="page-planner">
+      <div class="welcome"><div class="eyebrow">Make a little space</div><h1>Your planner.</h1><p class="intro">A plan doesn't need to be perfect. It just needs to help you find the next step.</p></div>
+      <section class="panel"><div class="panel-head"><div><h2>What's on your plate?</h2><p class="panel-subtitle">Your tasks, in one place.</p></div><button class="text-button" data-goto="overview">Back to overview</button></div><div id="plannerSummary"></div><div class="page-placeholder"><strong>Start with one thing.</strong>Add a task on the Overview page. You can mark it complete, filter by category, and export a backup whenever you need.</div></section>
+    </section>
+
+    <section class="page-panel" id="page-library">
+      <div class="welcome"><div class="eyebrow">Collect what matters</div><h1>Notes &amp; Library.</h1><p class="intro">A home for questions, discoveries, references, and ideas worth returning to.</p></div>
+      <section class="panel"><h2>Your library is taking shape.</h2><p class="panel-subtitle">This area is reserved for notes and saved resources.</p><div class="page-placeholder"><strong>Ideas deserve a home.</strong>The next milestone is a simple notes space where you can capture an idea, give it a title, and find it again later.</div></section>
+    </section>
+
+    <section class="page-panel" id="page-learning">
+      <div class="welcome"><div class="eyebrow">Learn with intention</div><h1>Learning.</h1><p class="intro">Move beyond finishing assignments. Build understanding that stays with you.</p></div>
+      <section class="panel"><h2>Your learning tools</h2><p class="panel-subtitle">A place for practice, review, and progress.</p><div class="page-placeholder"><strong>Understand a little more.</strong>Flashcards, review sessions, and learning progress can live here as Odelis grows.</div></section>
+    </section>
+    <div class="footer">odelis · A space for thought.</div>
+  </main>
+</div>
 
 <script>
-  const KEY = "studyos-tasks-v1";
+  const KEY = "odelis-tasks-v1";
+  const LEGACY_KEY = "studyos-tasks-v1";
   const $ = id => document.getElementById(id);
   let tasks = load();
   let filter = "All";
 
   function load() {
     try {
-      const data = JSON.parse(localStorage.getItem(KEY) || "[]");
-      return Array.isArray(data) ? data.filter(
-        t => t && typeof t.id === "string" && typeof t.title === "string"
-      ) : [];
-    } catch {
-      return [];
-    }
+      const current = localStorage.getItem(KEY);
+      const old = current === null ? localStorage.getItem(LEGACY_KEY) : null;
+      const data = JSON.parse(current ?? old ?? "[]");
+      return Array.isArray(data) ? data.filter(t => t && typeof t.id === "string" && typeof t.title === "string").map(t => ({
+        id: t.id, title: t.title, category: ["School","Acadeca","Personal","Project","Other","Sports"].includes(t.category) ? t.category : "Other",
+        priority: ["High","Medium","Low"].includes(t.priority) ? t.priority : "Medium",
+        deadline: typeof t.deadline === "string" ? t.deadline : "",
+        duration: Number.isFinite(Number(t.duration)) ? Number(t.duration) : 30,
+        done: Boolean(t.done)
+      })) : [];
+    } catch { return []; }
   }
 
   function save() {
-    try {
-      localStorage.setItem(KEY, JSON.stringify(tasks));
-      return true;
-    } catch {
-      alert("Unable to save. Export a backup before continuing.");
-      return false;
-    }
+    try { localStorage.setItem(KEY, JSON.stringify(tasks)); return true; }
+    catch { alert("Odelis could not save in this browser. Please export a backup before continuing."); return false; }
   }
 
   function todayString() {
@@ -220,42 +281,21 @@
   }
 
   function esc(s) {
-    return String(s).replace(/[&<>"']/g, c => ({
-      "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
-    })[c]);
+    return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
   }
 
-  function overdue(t) {
-    return !t.done && t.deadline && t.deadline < todayString();
-  }
+  function overdue(t) { return !t.done && t.deadline && t.deadline < todayString(); }
 
-  $("today").textContent = new Date().toLocaleDateString(undefined, {
-    weekday:"long", month:"long", day:"numeric", year:"numeric"
-  });
+  $("today").textContent = new Date().toLocaleDateString(undefined, {weekday:"long", month:"long", day:"numeric"});
+  if (localStorage.getItem(KEY) === null && localStorage.getItem(LEGACY_KEY) !== null) save();
 
   $("taskForm").addEventListener("submit", e => {
     e.preventDefault();
-
     const title = $("title").value.trim();
     if (!title) return;
-
-    tasks.push({
-      id: crypto.randomUUID(),
-      title,
-      category: $("category").value,
-      priority: $("priority").value,
-      deadline: $("deadline").value,
-      duration: Number($("duration").value),
-      done: false
-    });
-
-    if (save()) {
-      e.target.reset();
-      $("priority").value = "Medium";
-      $("duration").value = "30";
-      filter = "All";
-      render();
-    }
+    tasks.push({id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random(), title,
+      category: $("category").value, priority:"Medium", deadline:"", duration:30, done:false});
+    if (save()) { e.target.reset(); filter = "All"; render(); $("title").focus(); }
   });
 
   $("filters").addEventListener("click", e => {
@@ -268,74 +308,56 @@
   $("tasks").addEventListener("change", e => {
     const cb = e.target.closest("[data-check]");
     if (!cb) return;
-    const t = tasks.find(t => t.id === cb.dataset.check);
-    if (!t) return;
-    t.done = cb.checked;
+    const task = tasks.find(t => t.id === cb.dataset.check);
+    if (!task) return;
+    task.done = cb.checked;
     if (save()) render();
   });
 
   $("tasks").addEventListener("click", e => {
     const btn = e.target.closest("[data-delete]");
-    if (!btn || !confirm("Delete this task?")) return;
+    if (!btn) return;
     tasks = tasks.filter(t => t.id !== btn.dataset.delete);
     if (save()) render();
   });
 
   $("export").addEventListener("click", () => {
-    const blob = new Blob([JSON.stringify({version:1,tasks},null,2)], {
-      type:"application/json"
-    });
+    const blob = new Blob([JSON.stringify({version:1,tasks},null,2)], {type:"application/json"});
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url;
-    a.download = "studyos-backup.json";
-    a.click();
+    a.href = url; a.download = "odelis-backup.json"; a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   });
 
   $("importButton").addEventListener("click", () => $("importFile").click());
-
   $("importFile").addEventListener("change", async e => {
     const file = e.target.files[0];
     if (!file) return;
     try {
       const data = JSON.parse(await file.text());
-      if (!data || !Array.isArray(data.tasks) ||
-          !data.tasks.every(t => t && typeof t.id === "string" &&
-            typeof t.title === "string")) {
-        throw new Error("Invalid backup");
-      }
-      if (!confirm("Replace current tasks with this backup?")) return;
+      if (!data || !Array.isArray(data.tasks) || !data.tasks.every(t => t && typeof t.id === "string" && typeof t.title === "string")) throw new Error("Invalid backup");
+      if (!confirm("Replace your current Odelis tasks with this backup?")) return;
       const previous = tasks;
-      tasks = data.tasks;
+      tasks = data.tasks.map(t => ({id:t.id,title:t.title,category:t.category || "Other",priority:t.priority || "Medium",deadline:t.deadline || "",duration:Number(t.duration) || 30,done:Boolean(t.done)}));
       if (!save()) tasks = previous;
       render();
-    } catch {
-      alert("That file is not a valid StudyOS backup.");
-    } finally {
-      e.target.value = "";
-    }
+    } catch { alert("That file doesn't look like a valid Odelis task backup."); }
+    finally { e.target.value = ""; }
   });
 
   function render() {
     const today = todayString();
     const active = tasks.filter(t => !t.done);
-
     $("total").textContent = active.length;
     $("due").textContent = active.filter(t => t.deadline === today).length;
     $("completed").textContent = tasks.filter(t => t.done).length;
 
-    document.querySelectorAll("[data-filter]").forEach(b => {
-      b.classList.toggle("active", b.dataset.filter === filter);
-    });
-
+    document.querySelectorAll("[data-filter]").forEach(b => b.classList.toggle("active", b.dataset.filter === filter));
     const visible = tasks.filter(t => {
       if (filter === "Active") return !t.done;
       if (filter === "Completed") return t.done;
       if (filter === "Today") return !t.done && t.deadline === today;
-      if (["School","Acadeca","Sports","Personal"].includes(filter)) {
-        return t.category === filter;
-      }
+      if (["School","Acadeca","Personal","Project","Other","Sports"].includes(filter)) return t.category === filter;
       return true;
     }).sort((a,b) => {
       if (a.done !== b.done) return Number(a.done)-Number(b.done);
@@ -347,22 +369,30 @@
 
     $("tasks").innerHTML = visible.length ? visible.map(t => `
       <div class="task ${t.done ? "done" : ""}">
-        <input type="checkbox" data-check="${esc(t.id)}"
-          aria-label="Mark task complete" ${t.done ? "checked" : ""}>
-        <div class="task-info">
-          <div class="task-title">${esc(t.title)}</div>
-          <small>${esc(t.category)} · ${esc(t.priority)} priority · ${t.duration} min
-          ${t.deadline ? " · Due " + esc(t.deadline) : ""}
-          ${overdue(t) ? " · OVERDUE" : ""}</small>
+        <input class="task-check" type="checkbox" data-check="${esc(t.id)}" aria-label="Mark ${esc(t.title)} complete" ${t.done ? "checked" : ""}>
+        <div class="task-info"><div class="task-title">${esc(t.title)}</div>
+          <div class="task-meta"><span class="priority ${t.priority === "High" ? "high" : ""}">${esc(t.priority || "Medium")}</span>${esc(t.category || "Other")}${t.deadline ? " · Due " + esc(t.deadline) : ""}${overdue(t) ? " · Overdue" : ""}</div>
         </div>
-        <button class="delete" data-delete="${esc(t.id)}"
-          aria-label="Delete task">×</button>
-      </div>
-    `).join("") : '<p class="muted">No tasks here yet. Enjoy the breathing room!</p>';
+        <button class="delete" data-delete="${esc(t.id)}" aria-label="Delete ${esc(t.title)}" title="Delete task">×</button>
+      </div>`).join("") : `<div class="empty"><div class="empty-symbol">∿</div>${filter === "All" ? "Nothing here just yet. Add a task above to begin." : "No tasks match this view. Try another filter or add a task."}</div>`;
+
+    const dueSoon = active.filter(t => t.deadline).sort((a,b) => a.deadline.localeCompare(b.deadline));
+    $("plannerSummary").innerHTML = `<div class="stats" style="margin:20px 0 0"><div class="stat"><div class="stat-top">Active tasks</div><div class="stat-number">${active.length}</div></div><div class="stat"><div class="stat-top">With due dates</div><div class="stat-number">${dueSoon.length}</div></div><div class="stat"><div class="stat-top">Finished</div><div class="stat-number">${tasks.filter(t=>t.done).length}</div></div></div>`;
   }
 
+  function goTo(page) {
+    document.querySelectorAll(".nav-item").forEach(b => b.classList.toggle("active", b.dataset.page === page));
+    document.querySelectorAll(".page-panel").forEach(p => p.classList.toggle("active", p.id === "page-" + page));
+    $("sectionLabel").textContent = ({overview:"Your workspace",planner:"Plan with intention",library:"Ideas & references",learning:"Your learning space"})[page] || "Your workspace";
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+  document.querySelectorAll("[data-page]").forEach(b => b.addEventListener("click", () => goTo(b.dataset.page)));
+  document.querySelectorAll("[data-goto]").forEach(b => b.addEventListener("click", () => goTo(b.dataset.goto)));
+  $("focusButton").addEventListener("click", () => {
+    const next = tasks.find(t => !t.done);
+    alert(next ? "A possible next step:\n\n" + next.title + "\n\nGive it your attention, one step at a time." : "You have no active tasks right now. You can add one whenever you're ready.");
+  });
   render();
 </script>
 </body>
 </html>
-
