@@ -1,1 +1,369 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudyOS</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 30px 18px;
+      background: #10121b;
+      color: #f1f3fb;
+      font-family: system-ui, sans-serif;
+    }
+
+    main { max-width: 1000px; margin: auto; }
+    h1 { margin-bottom: 5px; }
+    .muted { color: #9ba3ba; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 24px 0;
+    }
+
+    .card {
+      background: #191c29;
+      border: 1px solid #2c3145;
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    .number { font-size: 28px; font-weight: 750; }
+
+    input, select, button {
+      font: inherit;
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    input, select {
+      width: 100%;
+      background: #10121b;
+      color: white;
+      border: 1px solid #363b50;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 5px;
+      color: #b4bad0;
+      font-size: 13px;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      background: #aa99ff;
+      color: #17142b;
+      font-weight: 650;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 12px;
+    }
+
+    .filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+    .filters button { background: #292d40; color: white; }
+    .filters button.active { background: #aa99ff; color: #17142b; }
+
+    .task {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 0;
+      border-bottom: 1px solid #2c3145;
+    }
+
+    .task input { width: 18px; }
+    .task-info { flex: 1; overflow-wrap: anywhere; }
+    .task small { display: block; color: #9ba3ba; margin-top: 5px; }
+    .task.done .task-title { text-decoration: line-through; color: #9ba3ba; }
+    .delete { background: transparent; color: #ff8989; font-size: 18px; }
+
+    @media (max-width: 650px) {
+      .stats { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; gap: 0; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>✦ StudyOS</h1>
+    <div class="muted">Your school, activities & life — in one place.</div>
+    <p id="today" class="muted"></p>
+  </header>
+
+  <section class="stats">
+    <div class="card">
+      <div class="muted">Active tasks</div>
+      <div class="number" id="total">0</div>
+    </div>
+    <div class="card">
+      <div class="muted">Due today</div>
+      <div class="number" id="due">0</div>
+    </div>
+    <div class="card">
+      <div class="muted">Completed</div>
+      <div class="number" id="completed">0</div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Add a task</h2>
+    <form id="taskForm">
+      <div class="form-grid">
+        <div>
+          <label for="title">Task name</label>
+          <input id="title" maxlength="140" placeholder="Study Acadeca science..." required>
+        </div>
+        <div>
+          <label for="category">Category</label>
+          <select id="category">
+            <option>School</option>
+            <option>Acadeca</option>
+            <option>Sports</option>
+            <option>Personal</option>
+          </select>
+        </div>
+        <div>
+          <label for="priority">Priority</label>
+          <select id="priority">
+            <option>High</option>
+            <option selected>Medium</option>
+            <option>Low</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div>
+          <label for="deadline">Due date</label>
+          <input id="deadline" type="date">
+        </div>
+        <div>
+          <label for="duration">Estimated minutes</label>
+          <select id="duration">
+            <option>15</option>
+            <option selected>30</option>
+            <option>45</option>
+            <option>60</option>
+            <option>90</option>
+            <option>120</option>
+          </select>
+        </div>
+        <div style="display:flex;align-items:end;padding-top:12px">
+          <button style="width:100%" type="submit">+ Add task</button>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Your tasks</h2>
+    <div class="filters" id="filters">
+      <button class="active" data-filter="All">All</button>
+      <button data-filter="Active">Active</button>
+      <button data-filter="Today">Due today</button>
+      <button data-filter="School">School</button>
+      <button data-filter="Acadeca">Acadeca</button>
+      <button data-filter="Sports">Sports</button>
+      <button data-filter="Completed">Completed</button>
+    </div>
+    <div id="tasks"></div>
+    <p class="muted" style="font-size:12px">
+      Tasks are saved in this browser. Use the same browser to access them.
+    </p>
+    <button id="export">Export backup</button>
+    <button id="importButton">Import backup</button>
+    <input id="importFile" type="file" accept=".json,application/json" hidden>
+  </section>
+</main>
+
+<script>
+  const KEY = "studyos-tasks-v1";
+  const $ = id => document.getElementById(id);
+  let tasks = load();
+  let filter = "All";
+
+  function load() {
+    try {
+      const data = JSON.parse(localStorage.getItem(KEY) || "[]");
+      return Array.isArray(data) ? data.filter(
+        t => t && typeof t.id === "string" && typeof t.title === "string"
+      ) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify(tasks));
+      return true;
+    } catch {
+      alert("Unable to save. Export a backup before continuing.");
+      return false;
+    }
+  }
+
+  function todayString() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+    })[c]);
+  }
+
+  function overdue(t) {
+    return !t.done && t.deadline && t.deadline < todayString();
+  }
+
+  $("today").textContent = new Date().toLocaleDateString(undefined, {
+    weekday:"long", month:"long", day:"numeric", year:"numeric"
+  });
+
+  $("taskForm").addEventListener("submit", e => {
+    e.preventDefault();
+
+    const title = $("title").value.trim();
+    if (!title) return;
+
+    tasks.push({
+      id: crypto.randomUUID(),
+      title,
+      category: $("category").value,
+      priority: $("priority").value,
+      deadline: $("deadline").value,
+      duration: Number($("duration").value),
+      done: false
+    });
+
+    if (save()) {
+      e.target.reset();
+      $("priority").value = "Medium";
+      $("duration").value = "30";
+      filter = "All";
+      render();
+    }
+  });
+
+  $("filters").addEventListener("click", e => {
+    const button = e.target.closest("[data-filter]");
+    if (!button) return;
+    filter = button.dataset.filter;
+    render();
+  });
+
+  $("tasks").addEventListener("change", e => {
+    const cb = e.target.closest("[data-check]");
+    if (!cb) return;
+    const t = tasks.find(t => t.id === cb.dataset.check);
+    if (!t) return;
+    t.done = cb.checked;
+    if (save()) render();
+  });
+
+  $("tasks").addEventListener("click", e => {
+    const btn = e.target.closest("[data-delete]");
+    if (!btn || !confirm("Delete this task?")) return;
+    tasks = tasks.filter(t => t.id !== btn.dataset.delete);
+    if (save()) render();
+  });
+
+  $("export").addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify({version:1,tasks},null,2)], {
+      type:"application/json"
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "studyos-backup.json";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+
+  $("importButton").addEventListener("click", () => $("importFile").click());
+
+  $("importFile").addEventListener("change", async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      if (!data || !Array.isArray(data.tasks) ||
+          !data.tasks.every(t => t && typeof t.id === "string" &&
+            typeof t.title === "string")) {
+        throw new Error("Invalid backup");
+      }
+      if (!confirm("Replace current tasks with this backup?")) return;
+      const previous = tasks;
+      tasks = data.tasks;
+      if (!save()) tasks = previous;
+      render();
+    } catch {
+      alert("That file is not a valid StudyOS backup.");
+    } finally {
+      e.target.value = "";
+    }
+  });
+
+  function render() {
+    const today = todayString();
+    const active = tasks.filter(t => !t.done);
+
+    $("total").textContent = active.length;
+    $("due").textContent = active.filter(t => t.deadline === today).length;
+    $("completed").textContent = tasks.filter(t => t.done).length;
+
+    document.querySelectorAll("[data-filter]").forEach(b => {
+      b.classList.toggle("active", b.dataset.filter === filter);
+    });
+
+    const visible = tasks.filter(t => {
+      if (filter === "Active") return !t.done;
+      if (filter === "Completed") return t.done;
+      if (filter === "Today") return !t.done && t.deadline === today;
+      if (["School","Acadeca","Sports","Personal"].includes(filter)) {
+        return t.category === filter;
+      }
+      return true;
+    }).sort((a,b) => {
+      if (a.done !== b.done) return Number(a.done)-Number(b.done);
+      if (a.deadline && b.deadline) return a.deadline.localeCompare(b.deadline);
+      if (a.deadline) return -1;
+      if (b.deadline) return 1;
+      return 0;
+    });
+
+    $("tasks").innerHTML = visible.length ? visible.map(t => `
+      <div class="task ${t.done ? "done" : ""}">
+        <input type="checkbox" data-check="${esc(t.id)}"
+          aria-label="Mark task complete" ${t.done ? "checked" : ""}>
+        <div class="task-info">
+          <div class="task-title">${esc(t.title)}</div>
+          <small>${esc(t.category)} · ${esc(t.priority)} priority · ${t.duration} min
+          ${t.deadline ? " · Due " + esc(t.deadline) : ""}
+          ${overdue(t) ? " · OVERDUE" : ""}</small>
+        </div>
+        <button class="delete" data-delete="${esc(t.id)}"
+          aria-label="Delete task">×</button>
+      </div>
+    `).join("") : '<p class="muted">No tasks here yet. Enjoy the breathing room!</p>';
+  }
+
+  render();
+</script>
+</body>
+</html>
+
