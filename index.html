@@ -7,7 +7,7 @@
   <title>Odelis — A space for thought</title>
   <meta name="description" content="A thoughtful workspace for learning, planning, and organizing ideas.">
   <link rel="stylesheet" href="style.css">
-  <script src="script.js"></script>
+  <script src="script.js" defer></script>
 </head>
 
 <body>
@@ -104,7 +104,41 @@
 
     <section class="page-panel" id="page-library">
       <div class="welcome"><div class="eyebrow">Collect what matters</div><h1>Notes &amp; Library.</h1><p class="intro">A home for questions, discoveries, references, and ideas worth returning to.</p></div>
-      <section class="panel"><h2>Your library is taking shape.</h2><p class="panel-subtitle">This area is reserved for notes and saved resources.</p><div class="page-placeholder"><strong>Ideas deserve a home.</strong>The next milestone is a simple notes space where you can capture an idea, give it a title, and find it again later.</div></section>
+      <div class="library-layout">
+        <section class="panel library-editor">
+          <div class="panel-head"><div><h2 id="noteEditorHeading">Capture a thought</h2><p class="panel-subtitle">Small ideas can become important things.</p></div><span class="library-mark" aria-hidden="true">✳</span></div>
+          <form id="noteForm">
+            <input type="hidden" id="noteId">
+            <label class="field-label" for="noteTitle">Title</label>
+            <input class="field note-title-field" id="noteTitle" maxlength="120" placeholder="Give this thought a name" required>
+            <label class="field-label" for="noteBody">Your note</label>
+            <textarea class="field note-body-field" id="noteBody" maxlength="12000" rows="7" placeholder="Write an idea, a question, something you learned…" ></textarea>
+            <div class="note-form-row">
+              <div class="note-category-wrap"><label class="field-label" for="noteCategory">Collection</label><select class="field" id="noteCategory"><option>Ideas</option><option>School</option><option>Acadeca</option><option>Projects</option><option>Reading</option><option>Reference</option></select></div>
+              <label class="pin-toggle"><input id="notePinned" type="checkbox"><span>Pin this note</span></label>
+            </div>
+            <div class="note-actions"><button class="primary" type="submit" id="saveNoteButton">Save note</button><button class="text-button" type="button" id="cancelNoteEdit" hidden>Cancel edit</button><span class="note-save-status" id="noteSaveStatus" aria-live="polite"></span></div>
+          </form>
+        </section>
+        <section class="panel library-list-panel">
+          <div class="panel-head"><div><h2>Your collection</h2><p class="panel-subtitle" id="noteCount">Your thoughts, kept in one place.</p></div><button class="text-button" id="exportNotes">Export notes ↗</button></div>
+          <label class="field-label" for="noteSearch">Search your notes</label>
+          <input class="field note-search" id="noteSearch" type="search" placeholder="Search titles, ideas, and collections…">
+          <div class="note-collections" id="noteCollections" aria-label="Filter notes by collection">
+            <button class="filter active" type="button" data-note-filter="All">All notes</button>
+            <button class="filter" type="button" data-note-filter="Pinned">Pinned</button>
+            <button class="filter" type="button" data-note-filter="Ideas">Ideas</button>
+            <button class="filter" type="button" data-note-filter="School">School</button>
+            <button class="filter" type="button" data-note-filter="Acadeca">Acadeca</button>
+            <button class="filter" type="button" data-note-filter="Projects">Projects</button>
+            <button class="filter" type="button" data-note-filter="Reading">Reading</button>
+            <button class="filter" type="button" data-note-filter="Reference">Reference</button>
+          </div>
+          <div id="notesList" class="notes-list" aria-live="polite"></div>
+          <p class="panel-subtitle note-storage-hint">Notes are saved in this browser on this device. Export a backup to keep a copy.</p>
+          <div class="note-import-row"><button class="text-button" id="importNotesButton" type="button">Import notes backup</button><input id="importNotesFile" type="file" accept=".json,application/json" hidden></div>
+        </section>
+      </div>
     </section>
 
     <section class="page-panel" id="page-learning">
