@@ -179,3 +179,10 @@
   .pin-toggle { padding-bottom:7px; }
   .note-card { padding:13px; }
 }
+
+/* Planner improvements */
+.add-form { grid-template-columns: minmax(0,1fr) 112px 100px 145px auto; }
+.planner-controls { display:flex; align-items:center; gap:12px; max-width:300px; margin-top:22px; }
+.planner-controls .field-label { margin:0; white-space:nowrap; }
+@media (max-width:950px) { .add-form { grid-template-columns:minmax(0,1fr) 112px 100px; } .add-form #deadline { grid-column:1; } .add-form .primary { grid-column:2 / -1; grid-row:2; } }
+@media (max-width:650px) { .add-form { grid-template-columns:minmax(0,1fr) auto; } .add-form #category, .add-form #priority, .add-form #deadline { grid-column:1 / -1; grid-row:auto; } .add-form .primary { grid-column:1 / -1; grid-row:auto; } }
