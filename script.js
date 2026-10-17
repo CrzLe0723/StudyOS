@@ -191,6 +191,183 @@
   $("plannerView").addEventListener("change", render);
   render();
 
+  // Weekly schedule — stored separately from tasks and notes in this browser.
+  const SCHEDULE_KEY = "odelis-schedule-v1";
+  let schedule = loadSchedule();
+  let weekOffset = 0;
+
+  function loadSchedule() {
+    try {
+      const data = JSON.parse(localStorage.getItem(SCHEDULE_KEY) || "[]");
+      return Array.isArray(data) ? data.filter(b => b && typeof b.id === "string" && typeof b.title === "string" && /^\\d{4}-\\d{2}-\\d{2}$/.test(b.date) && /^\\d{2}:\\d{2}$/.test(b.start) && /^\\d{2}:\\d{2}$/.test(b.end) && b.start < b.end).map(b => ({
+        id:b.id, title:b.title.slice(0,120), date:b.date, start:b.start, end:b.end,
+        category:["Study","Break","Activity","Other"].includes(b.category) ? b.category : "Other"
+      })) : [];
+    } catch { return []; }
+  }
+
+  function saveSchedule() {
+    try { localStorage.setItem(SCHEDULE_KEY, JSON.stringify(schedule)); return true; }
+    catch { alert("Odelis could not save your schedule in this browser. Please remove some browser data or keep a separate note of your plans."); return false; }
+  }
+
+  function localDateString(date) {
+    return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
+  }
+
+  function dateFromString(value) {
+    return new Date(value + "T12:00:00");
+  }
+
+  function weekStart(offset = weekOffset) {
+    const date = new Date();
+    date.setHours(12,0,0,0);
+    date.setDate(date.getDate() - ((date.getDay()+6)%7) + offset*7);
+    return date;
+  }
+
+  function weekDates(offset = weekOffset) {
+    const start = weekStart(offset);
+    return Array.from({length:7}, (_,i) => {
+      const date = new Date(start);
+      date.setDate(start.getDate()+i);
+      return {date, key:localDateString(date)};
+    });
+  }
+
+  function formatTime(value) {
+    const [hour, minute] = value.split(":").map(Number);
+    const date = new Date();
+    date.setHours(hour,minute,0,0);
+    return date.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"});
+  }
+
+  function resetScheduleForm() {
+    $("scheduleForm").reset();
+    $("scheduleId").value = "";
+    $("scheduleDate").value = localDateString(new Date());
+    $("scheduleStart").value = "16:00";
+    $("scheduleEnd").value = "16:30";
+    $("scheduleEditorSummary").textContent = "Add a time block";
+    $("saveScheduleButton").textContent = "Add block";
+    $("cancelScheduleEdit").hidden = true;
+    $("scheduleStatus").textContent = "";
+  }
+
+  function renderSchedule() {
+    const dates = weekDates();
+    const first = dates[0].date;
+    const last = dates[6].date;
+    const monthFormat = {month:"short",day:"numeric"};
+    $("weekRange").textContent = first.getMonth() === last.getMonth()
+      ? `${first.toLocaleDateString(undefined,{month:"long"})} ${first.getDate()}–${last.getDate()}, ${last.getFullYear()}`
+      : `${first.toLocaleDateString(undefined,monthFormat)} – ${last.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"})}`;
+    const today = todayString();
+    const weekItems = schedule.filter(item => dates.some(day => day.key === item.date)).sort((a,b) => a.date.localeCompare(b.date) || a.start.localeCompare(b.start));
+    $("weekGrid").innerHTML = dates.map(day => {
+      const dayItems = weekItems.filter(item => item.date === day.key);
+      return `<section class="week-day ${day.key === today ? "is-today" : ""}">
+        <header class="week-day-head"><span>${day.date.toLocaleDateString(undefined,{weekday:"short"})}</span><strong>${day.date.getDate()}</strong></header>
+        <div class="week-day-blocks">${dayItems.length ? dayItems.map(item => `<article class="schedule-block ${item.category.toLowerCase()}" title="${esc(item.title)}">
+          <div class="schedule-block-time">${esc(formatTime(item.start))}–${esc(formatTime(item.end))}</div>
+          <div class="schedule-block-title">${esc(item.title)}</div>
+          <div class="schedule-block-type">${esc(item.category)}</div>
+          <div class="schedule-block-actions"><button type="button" data-edit-block="${esc(item.id)}" aria-label="Edit ${esc(item.title)}">Edit</button><button type="button" data-delete-block="${esc(item.id)}" aria-label="Delete ${esc(item.title)}">×</button></div>
+        </article>`).join("") : `<button class="day-empty" type="button" data-add-date="${day.key}">+ Add block</button>`}</div>
+      </section>`;
+    }).join("");
+
+    $("agendaCount").textContent = `${weekItems.length} ${weekItems.length === 1 ? "block" : "blocks"}`;
+    $("weekAgenda").innerHTML = weekItems.length ? weekItems.map(item => {
+      const date = dateFromString(item.date);
+      return `<article class="agenda-row">
+        <div class="agenda-date"><strong>${esc(date.toLocaleDateString(undefined,{weekday:"short"}))}</strong><span>${esc(date.toLocaleDateString(undefined,{month:"short",day:"numeric"}))}</span></div>
+        <div class="agenda-time">${esc(formatTime(item.start))}<span>to</span>${esc(formatTime(item.end))}</div>
+        <span class="agenda-category ${item.category.toLowerCase()}">${esc(item.category)}</span>
+        <div class="agenda-title">${esc(item.title)}</div>
+        <div class="agenda-actions"><button class="text-button" type="button" data-edit-block="${esc(item.id)}">Edit</button><button class="text-button" type="button" data-delete-block="${esc(item.id)}">Delete</button></div>
+      </article>`;
+    }).join("") : `<div class="empty"><div class="empty-symbol">∿</div>No time blocks this week yet. Add one above to give a task or break a place in your schedule.</div>`;
+  }
+
+  $("scheduleForm").addEventListener("submit", event => {
+    event.preventDefault();
+    const title = $("scheduleTitle").value.trim();
+    const date = $("scheduleDate").value;
+    const start = $("scheduleStart").value;
+    const end = $("scheduleEnd").value;
+    if (!title || !date || !start || !end) return;
+    if (start >= end) {
+      $("scheduleStatus").textContent = "Choose an end time after the start time.";
+      $("scheduleEnd").focus();
+      return;
+    }
+    const id = $("scheduleId").value;
+    const previous = schedule;
+    const block = {id:id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())+Math.random()),title,date,start,end,category:$("scheduleCategory").value};
+    schedule = id ? schedule.map(item => item.id === id ? block : item) : [...schedule,block];
+    if (saveSchedule()) {
+      weekOffset = Math.round((dateFromString(date)-weekStart(0))/604800000);
+      renderSchedule();
+      resetScheduleForm();
+      $("scheduleStatus").textContent = id ? "Block updated." : "Block added.";
+    } else schedule = previous;
+  });
+
+  $("cancelScheduleEdit").addEventListener("click", resetScheduleForm);
+  $("previousWeek").addEventListener("click", () => { weekOffset--; renderSchedule(); });
+  $("nextWeek").addEventListener("click", () => { weekOffset++; renderSchedule(); });
+  $("currentWeek").addEventListener("click", () => { weekOffset = 0; renderSchedule(); });
+  $("weekGrid").addEventListener("click", event => {
+    const add = event.target.closest("[data-add-date]");
+    if (add) {
+      resetScheduleForm();
+      $("scheduleDate").value = add.dataset.addDate;
+      $("scheduleTitle").focus();
+      $("scheduleEditor").open = true;
+      $("scheduleEditor").scrollIntoView({behavior:"smooth",block:"nearest"});
+      return;
+    }
+    const edit = event.target.closest("[data-edit-block]");
+    const remove = event.target.closest("[data-delete-block]");
+    if (edit) editScheduleBlock(edit.dataset.editBlock);
+    if (remove) deleteScheduleBlock(remove.dataset.deleteBlock);
+  });
+  $("weekAgenda").addEventListener("click", event => {
+    const edit = event.target.closest("[data-edit-block]");
+    const remove = event.target.closest("[data-delete-block]");
+    if (edit) editScheduleBlock(edit.dataset.editBlock);
+    if (remove) deleteScheduleBlock(remove.dataset.deleteBlock);
+  });
+
+  function editScheduleBlock(id) {
+    const item = schedule.find(block => block.id === id);
+    if (!item) return;
+    $("scheduleId").value = item.id;
+    $("scheduleTitle").value = item.title;
+    $("scheduleDate").value = item.date;
+    $("scheduleStart").value = item.start;
+    $("scheduleEnd").value = item.end;
+    $("scheduleCategory").value = item.category;
+    $("scheduleEditorSummary").textContent = "Edit time block";
+    $("saveScheduleButton").textContent = "Save changes";
+    $("cancelScheduleEdit").hidden = false;
+    $("scheduleEditor").open = true;
+    $("scheduleTitle").focus();
+    $("scheduleEditor").scrollIntoView({behavior:"smooth",block:"nearest"});
+  }
+
+  function deleteScheduleBlock(id) {
+    const item = schedule.find(block => block.id === id);
+    if (!item || !confirm(`Delete “${item.title}” from your schedule?`)) return;
+    const previous = schedule;
+    schedule = schedule.filter(block => block.id !== id);
+    if (saveSchedule()) renderSchedule(); else schedule = previous;
+  }
+
+  resetScheduleForm();
+  renderSchedule();
+
 
 // Notes & Library — kept locally in this browser, separate from task data.
 const NOTES_KEY = "odelis-notes-v1";
