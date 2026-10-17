@@ -186,3 +186,21 @@
 .planner-controls .field-label { margin:0; white-space:nowrap; }
 @media (max-width:950px) { .add-form { grid-template-columns:minmax(0,1fr) 112px 100px; } .add-form #deadline { grid-column:1; } .add-form .primary { grid-column:2 / -1; grid-row:2; } }
 @media (max-width:650px) { .add-form { grid-template-columns:minmax(0,1fr) auto; } .add-form #category, .add-form #priority, .add-form #deadline { grid-column:1 / -1; grid-row:auto; } .add-form .primary { grid-column:1 / -1; grid-row:auto; } }
+
+/* Overview: next steps and deadlines */
+.overview-task-list, .overview-deadline-list { display:grid; gap:0; }
+.overview-task-row { display:flex; align-items:center; gap:11px; padding:13px 0; border-bottom:1px solid var(--line); min-width:0; }
+.overview-task-row:last-child, .overview-deadline-row:last-child { border-bottom:0; }
+.overview-task-number { display:grid; place-items:center; flex:0 0 27px; width:27px; height:27px; border-radius:50%; background:var(--forest-soft); color:var(--forest); font-size:12px; font-weight:700; }
+.overview-task-copy { min-width:0; flex:1; }
+.overview-task-title { color:var(--ink); font-size:13px; line-height:1.45; overflow-wrap:anywhere; }
+.overview-complete { flex:0 0 auto; }
+.overview-deadline-row { display:flex; align-items:center; gap:14px; padding:12px 0; border-bottom:1px solid var(--line); }
+.overview-deadline-date { display:flex; flex-direction:column; min-width:83px; gap:3px; color:var(--muted); font-size:10px; }
+.overview-deadline-date strong { color:var(--forest); font-size:12px; }
+.overview-deadline-date.overdue strong { color:var(--rose); }
+.overview-deadline-date.today strong { color:var(--forest); }
+.overview-deadline-title { min-width:0; font-size:12px; line-height:1.5; overflow-wrap:anywhere; }
+.overview-empty { display:flex; flex-direction:column; gap:5px; padding:14px 0 4px; color:var(--muted); font-size:12px; line-height:1.55; }
+.overview-empty strong { color:var(--forest); font-size:13px; font-weight:650; }
+@media (max-width:650px) { .overview-task-row { gap:8px; } .overview-deadline-row { gap:10px; } }
