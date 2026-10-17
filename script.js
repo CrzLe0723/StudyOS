@@ -142,3 +142,168 @@
     alert(next ? "A possible next step:\n\n" + next.title + "\n\nGive it your attention, one step at a time." : "You have no active tasks right now. You can add one whenever you're ready.");
   });
   render();
+
+
+// Notes & Library — kept locally in this browser, separate from task data.
+const NOTES_KEY = "odelis-notes-v1";
+let notes = loadNotes();
+let noteFilter = "All";
+
+function loadNotes() {
+  try {
+    const data = JSON.parse(localStorage.getItem(NOTES_KEY) || "[]");
+    return Array.isArray(data) ? data.filter(n => n && typeof n.id === "string" && typeof n.title === "string").map(n => ({
+      id: n.id,
+      title: n.title.slice(0, 120),
+      body: typeof n.body === "string" ? n.body.slice(0, 12000) : "",
+      category: ["Ideas","School","Acadeca","Projects","Reading","Reference"].includes(n.category) ? n.category : "Ideas",
+      pinned: Boolean(n.pinned),
+      updatedAt: typeof n.updatedAt === "string" ? n.updatedAt : new Date().toISOString()
+    })) : [];
+  } catch { return []; }
+}
+
+function saveNotes() {
+  try {
+    localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+    return true;
+  } catch {
+    alert("Odelis could not save your notes in this browser. Please export a backup before continuing.");
+    return false;
+  }
+}
+
+function noteDate(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "Recently edited" : date.toLocaleDateString(undefined, {month:"short", day:"numeric", year:"numeric"});
+}
+
+function resetNoteForm() {
+  $("noteForm").reset();
+  $("noteId").value = "";
+  $("noteEditorHeading").textContent = "Capture a thought";
+  $("saveNoteButton").textContent = "Save note";
+  $("cancelNoteEdit").hidden = true;
+  $("noteSaveStatus").textContent = "";
+}
+
+function renderNotes() {
+  const query = $("noteSearch").value.trim().toLocaleLowerCase();
+  const visible = notes.filter(note => {
+    const matchesFilter = noteFilter === "All" || (noteFilter === "Pinned" ? note.pinned : note.category === noteFilter);
+    const haystack = [note.title, note.body, note.category].join(" ").toLocaleLowerCase();
+    return matchesFilter && haystack.includes(query);
+  }).sort((a,b) => Number(b.pinned)-Number(a.pinned) || b.updatedAt.localeCompare(a.updatedAt));
+
+  $("noteCount").textContent = `${notes.length} ${notes.length === 1 ? "note" : "notes"} saved · ${notes.filter(n => n.pinned).length} pinned`;
+  document.querySelectorAll("[data-note-filter]").forEach(button => button.classList.toggle("active", button.dataset.noteFilter === noteFilter));
+
+  $("notesList").innerHTML = visible.length ? visible.map(note => `
+    <article class="note-card ${note.pinned ? "is-pinned" : ""}">
+      <div class="note-card-top"><span class="note-category-chip">${esc(note.category)}</span><span class="note-date">${esc(noteDate(note.updatedAt))}</span></div>
+      <h3 class="note-card-title">${esc(note.title)}</h3>
+      <p class="note-card-body">${esc(note.body || "An empty page, ready for a thought.")}</p>
+      <div class="note-card-actions">
+        <button class="text-button" type="button" data-edit-note="${esc(note.id)}">Edit</button>
+        <button class="text-button" type="button" data-pin-note="${esc(note.id)}">${note.pinned ? "Unpin" : "Pin"}</button>
+        <button class="text-button note-delete" type="button" data-delete-note="${esc(note.id)}">Delete</button>
+      </div>
+    </article>`).join("") : `<div class="notes-empty"><div class="empty-symbol">∿</div><strong>${query || noteFilter !== "All" ? "No notes found." : "A little space for your ideas."}</strong><span>${query || noteFilter !== "All" ? "Try a different search or collection." : "Write your first note above. It will be here when you return on this device."}</span></div>`;
+}
+
+$("noteForm").addEventListener("submit", event => {
+  event.preventDefault();
+  const title = $("noteTitle").value.trim();
+  if (!title) { $("noteTitle").focus(); return; }
+  const existingId = $("noteId").value;
+  const previous = notes;
+  const existing = notes.find(n => n.id === existingId);
+  const note = {
+    id: existing ? existing.id : (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random()),
+    title,
+    body: $("noteBody").value.trim(),
+    category: $("noteCategory").value,
+    pinned: $("notePinned").checked,
+    updatedAt: new Date().toISOString()
+  };
+  notes = existing ? notes.map(n => n.id === existing.id ? note : n) : [note, ...notes];
+  if (saveNotes()) {
+    resetNoteForm();
+    noteFilter = "All";
+    $("noteSearch").value = "";
+    renderNotes();
+    $("noteSaveStatus").textContent = "Saved";
+  } else { notes = previous; }
+});
+
+$("cancelNoteEdit").addEventListener("click", resetNoteForm);
+$("noteSearch").addEventListener("input", renderNotes);
+$("noteCollections").addEventListener("click", event => {
+  const button = event.target.closest("[data-note-filter]");
+  if (!button) return;
+  noteFilter = button.dataset.noteFilter;
+  renderNotes();
+});
+
+$("notesList").addEventListener("click", event => {
+  const edit = event.target.closest("[data-edit-note]");
+  const pin = event.target.closest("[data-pin-note]");
+  const remove = event.target.closest("[data-delete-note]");
+  if (edit) {
+    const note = notes.find(n => n.id === edit.dataset.editNote);
+    if (!note) return;
+    $("noteId").value = note.id;
+    $("noteTitle").value = note.title;
+    $("noteBody").value = note.body;
+    $("noteCategory").value = note.category;
+    $("notePinned").checked = note.pinned;
+    $("noteEditorHeading").textContent = "Edit your thought";
+    $("saveNoteButton").textContent = "Update note";
+    $("cancelNoteEdit").hidden = false;
+    $("noteTitle").focus();
+    document.querySelector(".library-editor").scrollIntoView({behavior:"smooth",block:"start"});
+    return;
+  }
+  if (pin) {
+    const previous = notes;
+    notes = notes.map(n => n.id === pin.dataset.pinNote ? {...n, pinned:!n.pinned, updatedAt:new Date().toISOString()} : n);
+    if (saveNotes()) renderNotes(); else notes = previous;
+    return;
+  }
+  if (remove) {
+    const note = notes.find(n => n.id === remove.dataset.deleteNote);
+    if (!note || !confirm(`Delete “${note.title}”? This cannot be undone unless you have a backup.`)) return;
+    const previous = notes;
+    notes = notes.filter(n => n.id !== note.id);
+    if (saveNotes()) renderNotes(); else notes = previous;
+  }
+});
+
+$("exportNotes").addEventListener("click", () => {
+  const blob = new Blob([JSON.stringify({version:1, exportedAt:new Date().toISOString(), notes}, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url; link.download = "odelis-notes-backup.json"; link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+
+$("importNotesButton").addEventListener("click", () => $("importNotesFile").click());
+$("importNotesFile").addEventListener("change", async event => {
+  const file = event.target.files[0];
+  if (!file) return;
+  try {
+    const data = JSON.parse(await file.text());
+    if (!data || !Array.isArray(data.notes) || !data.notes.every(n => n && typeof n.id === "string" && typeof n.title === "string")) throw new Error("Invalid notes backup");
+    if (!confirm("Replace your current Odelis notes with this backup?")) return;
+    const previous = notes;
+    notes = data.notes.map(n => ({
+      id:n.id, title:n.title.slice(0,120), body:typeof n.body === "string" ? n.body.slice(0,12000) : "",
+      category:["Ideas","School","Acadeca","Projects","Reading","Reference"].includes(n.category) ? n.category : "Ideas",
+      pinned:Boolean(n.pinned), updatedAt:typeof n.updatedAt === "string" ? n.updatedAt : new Date().toISOString()
+    }));
+    if (saveNotes()) { resetNoteForm(); renderNotes(); } else { notes = previous; }
+  } catch { alert("That file doesn't look like a valid Odelis notes backup."); }
+  finally { event.target.value = ""; }
+});
+
+renderNotes();
