@@ -111,6 +111,31 @@
 
     <section class="page-panel" id="page-planner">
       <div class="welcome"><div class="eyebrow">Make a little space</div><h1>Your planner.</h1><p class="intro">A plan doesn't need to be perfect. It just needs to help you find the next step.</p></div>
+      <section class="panel weekly-panel">
+        <div class="panel-head"><div><h2>Your week</h2><p class="panel-subtitle">Give your priorities a place in the week.</p></div><span class="library-mark" aria-hidden="true">▦</span></div>
+        <div class="week-toolbar">
+          <div class="week-nav"><button class="secondary-button" id="previousWeek" type="button" aria-label="Previous week">←</button><button class="text-button" id="currentWeek" type="button">This week</button><button class="secondary-button" id="nextWeek" type="button" aria-label="Next week">→</button></div>
+          <div class="week-range" id="weekRange" aria-live="polite"></div>
+        </div>
+        <div id="weekGrid" class="week-grid" aria-label="Weekly calendar"></div>
+        <div class="week-legend"><span><i class="schedule-dot study"></i>Study</span><span><i class="schedule-dot break"></i>Break</span><span><i class="schedule-dot activity"></i>Activity</span><span><i class="schedule-dot other"></i>Other</span></div>
+        <details class="schedule-editor" id="scheduleEditor" open>
+          <summary id="scheduleEditorSummary">Add a time block</summary>
+          <form id="scheduleForm" class="schedule-form">
+            <input type="hidden" id="scheduleId">
+            <label class="field-label" for="scheduleTitle">What are you planning?</label>
+            <input class="field" id="scheduleTitle" maxlength="120" placeholder="e.g. Algebra practice" required>
+            <div class="schedule-fields">
+              <div><label class="field-label" for="scheduleDate">Date</label><input class="field" id="scheduleDate" type="date" required></div>
+              <div><label class="field-label" for="scheduleCategory">Type</label><select class="field" id="scheduleCategory"><option value="Study">Study</option><option value="Break">Break</option><option value="Activity">Activity</option><option value="Other">Other</option></select></div>
+              <div><label class="field-label" for="scheduleStart">Starts</label><input class="field" id="scheduleStart" type="time" value="16:00" required></div>
+              <div><label class="field-label" for="scheduleEnd">Ends</label><input class="field" id="scheduleEnd" type="time" value="16:30" required></div>
+            </div>
+            <div class="schedule-actions"><button class="primary" id="saveScheduleButton" type="submit">Add block</button><button class="text-button" id="cancelScheduleEdit" type="button" hidden>Cancel edit</button><span id="scheduleStatus" class="note-save-status" aria-live="polite"></span></div>
+          </form>
+        </details>
+      </section>
+      <section class="panel agenda-panel"><div class="panel-head"><div><h2>Agenda</h2><p class="panel-subtitle">A compact list of what's scheduled, in time order.</p></div><span id="agendaCount" class="agenda-count"></span></div><div id="weekAgenda" class="week-agenda" aria-live="polite"></div></section>
       <section class="panel"><div class="panel-head"><div><h2>What's on your plate?</h2><p class="panel-subtitle">Your tasks, ordered by what needs attention.</p></div><button class="text-button" data-goto="overview">Add a task ↗</button></div><div id="plannerSummary"></div><div class="planner-controls"><label class="field-label" for="plannerView">Show</label><select class="field" id="plannerView"><option value="upcoming">Upcoming &amp; overdue</option><option value="all">All tasks</option><option value="completed">Completed</option></select></div><div id="plannerTasks" class="task-list" aria-live="polite"></div></section>
     </section>
 
