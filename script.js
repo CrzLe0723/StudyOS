@@ -125,6 +125,29 @@
         <button class="delete" data-delete="${esc(t.id)}" aria-label="Delete ${esc(t.title)}" title="Delete task">×</button>
       </div>`).join("") : `<div class="empty"><div class="empty-symbol">∿</div>${filter === "All" ? "Nothing here just yet. Add a task above to begin." : "No tasks match this view. Try another filter or add a task."}</div>`;
 
+    const rank = {High:0,Medium:1,Low:2};
+    const orderedActive = [...active].sort((a,b) => {
+      const ad = a.deadline || "9999-12-31";
+      const bd = b.deadline || "9999-12-31";
+      if (ad !== bd) return ad.localeCompare(bd);
+      return (rank[a.priority] ?? 1) - (rank[b.priority] ?? 1);
+    });
+    const nextSteps = orderedActive.slice(0, 3);
+    $("overviewNextSteps").innerHTML = nextSteps.length ? nextSteps.map((t, index) => `
+      <div class="overview-task-row">
+        <span class="overview-task-number">${index + 1}</span>
+        <div class="overview-task-copy"><div class="overview-task-title">${esc(t.title)}</div><div class="task-meta"><span class="priority ${t.priority === "High" ? "high" : ""}">${esc(t.priority || "Medium")}</span>${esc(t.category || "Other")}</div></div>
+        <button class="text-button overview-complete" type="button" data-overview-complete="${esc(t.id)}" aria-label="Mark ${esc(t.title)} complete">Done</button>
+      </div>`).join("") : `<div class="overview-empty"><strong>Room to breathe.</strong><span>No active tasks right now. Add one when you're ready.</span></div>`;
+
+    const deadlineTasks = active.filter(t => t.deadline).sort((a,b) => a.deadline.localeCompare(b.deadline)).slice(0, 4);
+    $("overviewDeadlines").innerHTML = deadlineTasks.length ? deadlineTasks.map(t => {
+      const date = new Date(t.deadline + "T00:00:00");
+      const dateLabel = t.deadline === today ? "Today" : t.deadline < today ? "Overdue" : date.toLocaleDateString(undefined, {month:"short",day:"numeric"});
+      const status = t.deadline < today ? "overdue" : t.deadline === today ? "today" : "";
+      return `<div class="overview-deadline-row"><div class="overview-deadline-date ${status}"><strong>${esc(dateLabel)}</strong><span>${esc(t.deadline < today ? "Needs attention" : t.deadline === today ? "Due today" : date.toLocaleDateString(undefined,{weekday:"short"}))}</span></div><div class="overview-deadline-title">${esc(t.title)}</div></div>`;
+    }).join("") : `<div class="overview-empty"><strong>No deadlines set.</strong><span>Add a due date to a task to see it here.</span></div>`;
+
     const dueSoon = active.filter(t => t.deadline).sort((a,b) => a.deadline.localeCompare(b.deadline));
     $("plannerSummary").innerHTML = `<div class="stats" style="margin:20px 0 0"><div class="stat"><div class="stat-top">Active tasks</div><div class="stat-number">${active.length}</div></div><div class="stat"><div class="stat-top">Due today</div><div class="stat-number">${active.filter(t => t.deadline === today).length}</div></div><div class="stat"><div class="stat-top">Overdue</div><div class="stat-number">${active.filter(t => t.deadline && t.deadline < today).length}</div></div></div>`;
 
@@ -150,9 +173,22 @@
   document.querySelectorAll("[data-page]").forEach(b => b.addEventListener("click", () => goTo(b.dataset.page)));
   document.querySelectorAll("[data-goto]").forEach(b => b.addEventListener("click", () => goTo(b.dataset.goto)));
   $("focusButton").addEventListener("click", () => {
-    const next = tasks.find(t => !t.done);
-    alert(next ? "A possible next step:\n\n" + next.title + "\n\nGive it your attention, one step at a time." : "You have no active tasks right now. You can add one whenever you're ready.");
+    const next = tasks.filter(t => !t.done).sort((a,b) => (a.deadline || "9999-12-31").localeCompare(b.deadline || "9999-12-31"))[0];
+    if (!next) { goTo("overview"); $("title").focus(); return; }
+    goTo("planner");
+    $("plannerView").value = "upcoming";
+    render();
   });
+  $("overviewNextSteps").addEventListener("click", event => {
+    const button = event.target.closest("[data-overview-complete]");
+    if (!button) return;
+    const task = tasks.find(t => t.id === button.dataset.overviewComplete);
+    if (!task) return;
+    const previous = tasks;
+    tasks = tasks.map(t => t.id === task.id ? {...t, done:true} : t);
+    if (save()) render(); else tasks = previous;
+  });
+  $("plannerView").addEventListener("change", render);
   render();
 
 
