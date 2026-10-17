@@ -43,7 +43,7 @@
     const title = $("title").value.trim();
     if (!title) return;
     tasks.push({id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random(), title,
-      category: $("category").value, priority:"Medium", deadline:"", duration:30, done:false});
+      category: $("category").value, priority:$("priority").value, deadline:$("deadline").value, duration:30, done:false});
     if (save()) { e.target.reset(); filter = "All"; render(); $("title").focus(); }
   });
 
@@ -126,7 +126,19 @@
       </div>`).join("") : `<div class="empty"><div class="empty-symbol">∿</div>${filter === "All" ? "Nothing here just yet. Add a task above to begin." : "No tasks match this view. Try another filter or add a task."}</div>`;
 
     const dueSoon = active.filter(t => t.deadline).sort((a,b) => a.deadline.localeCompare(b.deadline));
-    $("plannerSummary").innerHTML = `<div class="stats" style="margin:20px 0 0"><div class="stat"><div class="stat-top">Active tasks</div><div class="stat-number">${active.length}</div></div><div class="stat"><div class="stat-top">With due dates</div><div class="stat-number">${dueSoon.length}</div></div><div class="stat"><div class="stat-top">Finished</div><div class="stat-number">${tasks.filter(t=>t.done).length}</div></div></div>`;
+    $("plannerSummary").innerHTML = `<div class="stats" style="margin:20px 0 0"><div class="stat"><div class="stat-top">Active tasks</div><div class="stat-number">${active.length}</div></div><div class="stat"><div class="stat-top">Due today</div><div class="stat-number">${active.filter(t => t.deadline === today).length}</div></div><div class="stat"><div class="stat-top">Overdue</div><div class="stat-number">${active.filter(t => t.deadline && t.deadline < today).length}</div></div></div>`;
+
+    const plannerView = $("plannerView").value;
+    const plannerTasks = tasks.filter(t => plannerView === "all" ? true : plannerView === "completed" ? t.done : !t.done);
+    plannerTasks.sort((a,b) => {
+      if (a.done !== b.done) return Number(a.done)-Number(b.done);
+      const ad = a.deadline || "9999-12-31";
+      const bd = b.deadline || "9999-12-31";
+      if (ad !== bd) return ad.localeCompare(bd);
+      const rank = {High:0,Medium:1,Low:2};
+      return (rank[a.priority] ?? 1) - (rank[b.priority] ?? 1);
+    });
+    $("plannerTasks").innerHTML = plannerTasks.length ? plannerTasks.map(t => `<div class="task ${t.done ? "done" : ""}"><input class="task-check" type="checkbox" data-check="${esc(t.id)}" aria-label="Mark ${esc(t.title)} complete" ${t.done ? "checked" : ""}><div class="task-info"><div class="task-title">${esc(t.title)}</div><div class="task-meta"><span class="priority ${t.priority === "High" ? "high" : ""}">${esc(t.priority || "Medium")}</span>${esc(t.category || "Other")}${t.deadline ? " · Due " + esc(t.deadline) : " · No due date"}${overdue(t) ? " · Overdue" : ""}</div></div><button class="delete" data-delete="${esc(t.id)}" aria-label="Delete ${esc(t.title)}" title="Delete task">×</button></div>`).join("") : `<div class="empty"><div class="empty-symbol">∿</div>${plannerView === "completed" ? "Completed tasks will appear here." : "Nothing to show yet. Add a task to begin planning."}</div>`;
   }
 
   function goTo(page) {
