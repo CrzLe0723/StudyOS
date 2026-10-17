@@ -62,6 +62,8 @@
             <select class="field" id="category" aria-label="Task category">
               <option>School</option><option>Acadeca</option><option>Personal</option><option>Project</option><option>Other</option>
             </select>
+            <select class="field" id="priority" aria-label="Task priority"><option>Low</option><option selected>Medium</option><option>High</option></select>
+            <input class="field" id="deadline" type="date" aria-label="Due date" title="Optional due date">
             <button class="primary" type="submit">+ Add task</button>
           </form>
           <div class="filters" id="filters" aria-label="Filter tasks">
@@ -101,7 +103,7 @@
 
     <section class="page-panel" id="page-planner">
       <div class="welcome"><div class="eyebrow">Make a little space</div><h1>Your planner.</h1><p class="intro">A plan doesn't need to be perfect. It just needs to help you find the next step.</p></div>
-      <section class="panel"><div class="panel-head"><div><h2>What's on your plate?</h2><p class="panel-subtitle">Your tasks, in one place.</p></div><button class="text-button" data-goto="overview">Back to overview</button></div><div id="plannerSummary"></div><div class="page-placeholder"><strong>Start with one thing.</strong>Add a task on the Overview page. You can mark it complete, filter by category, and export a backup whenever you need.</div></section>
+      <section class="panel"><div class="panel-head"><div><h2>What's on your plate?</h2><p class="panel-subtitle">Your tasks, ordered by what needs attention.</p></div><button class="text-button" data-goto="overview">Add a task ↗</button></div><div id="plannerSummary"></div><div class="planner-controls"><label class="field-label" for="plannerView">Show</label><select class="field" id="plannerView"><option value="upcoming">Upcoming &amp; overdue</option><option value="all">All tasks</option><option value="completed">Completed</option></select></div><div id="plannerTasks" class="task-list" aria-live="polite"></div></section>
     </section>
 
     <section class="page-panel" id="page-library">
